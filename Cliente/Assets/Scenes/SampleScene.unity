@@ -216,9 +216,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 189899357}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4b578c8228fa674abb0254a05248da8, type: 3}
+  m_Script: {fileID: 11500000, guid: 5131680ca09cdeb4f8c7363f869ca6f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  localCube: {fileID: 189899357}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
