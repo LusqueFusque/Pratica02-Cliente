@@ -1,4 +1,4 @@
-using System.Collections.Concurrent; // para ConcurrentQueue
+using System.Collections.Concurrent;
 using UnityEngine;
 using System.Net;
 using System.Net.Sockets;
@@ -18,14 +18,13 @@ public class UdpClientPong : MonoBehaviour
 
     int myId = -1;
 
-    // Variáveis thread-safe para armazenar posições recebidas
     private ConcurrentQueue<Vector3> remotePositionsQueue = new ConcurrentQueue<Vector3>();
     private ConcurrentQueue<Vector3> ballPositionsQueue = new ConcurrentQueue<Vector3>();
 
     void Start()
     {
         client = new UdpClient(5002);
-        serverEP = new IPEndPoint(IPAddress.Parse("10.57.1.40"), 5001);
+        serverEP = new IPEndPoint(IPAddress.Parse("10.57.1.122"), 5001);
         client.Connect(serverEP);
 
         receiveThread = new Thread(ReceiveData);
@@ -38,36 +37,31 @@ public class UdpClientPong : MonoBehaviour
 
     void Update()
     {
-        // Movimento do cubo local apenas na vertical
-        float v = Input.GetAxis("Vertical");
-        Rigidbody2D localRb = localCube.GetComponent<Rigidbody2D>();
-        Vector2 targetPos = localRb.position + new Vector2(0, v) * 15f * Time.deltaTime;
-        localRb.MovePosition(targetPos);
-
+        // === Movimento da raquete local ===
+        float v = Input.GetAxisRaw("Vertical");
+        Vector3 pos = localCube.transform.position;
+        pos.y += v * 25f * Time.deltaTime; // velocidade bem maior
+        localCube.transform.position = pos;
 
         // Envia posição para o servidor
-        string msg = "POS:" 
-            + localCube.transform.position.x.ToString("F2", CultureInfo.InvariantCulture) 
-            + ";" 
-            + localCube.transform.position.y.ToString("F2", CultureInfo.InvariantCulture);
+        string msg = "POS:" +
+            pos.x.ToString("F2", CultureInfo.InvariantCulture) + ";" +
+            pos.y.ToString("F2", CultureInfo.InvariantCulture);
         byte[] data = Encoding.UTF8.GetBytes(msg);
         client.Send(data, data.Length);
 
-        // Aplica posição recebida para remoteCube (se houver)
+        // === Atualiza oponente ===
         if (remotePositionsQueue.TryDequeue(out Vector3 remotePos))
         {
-            Rigidbody2D remoteRb = remoteCube.GetComponent<Rigidbody2D>();
-            remoteRb.MovePosition(Vector2.Lerp(remoteRb.position, remotePos, Time.deltaTime * 15f));
-
+            remoteCube.transform.position = remotePos; // sem suavização
         }
 
-        // Aplica posição recebida para bola (se houver)
+        // === Atualiza bola ===
         if (ballPositionsQueue.TryDequeue(out Vector3 ballPos))
         {
-            ball.transform.position = Vector3.Lerp(ball.transform.position, ballPos, Time.deltaTime * 15f);
+            ball.transform.position = ballPos; // sem suavização
         }
     }
-
 
     void ReceiveData()
     {
