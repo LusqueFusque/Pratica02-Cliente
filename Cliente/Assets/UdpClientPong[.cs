@@ -24,12 +24,12 @@ public class UdpClientPong : MonoBehaviour
 
     void Start()
     {
-        client = new UdpClient();
-        serverEP = new IPEndPoint(IPAddress.Parse("10.57.1.35"), 5001);
+        client = new UdpClient(5002);
+        serverEP = new IPEndPoint(IPAddress.Parse("10.57.1.40"), 5001);
         client.Connect(serverEP);
 
         receiveThread = new Thread(ReceiveData);
-        receiveThread.IsBackground = true; // garante que thread será finalizada quando fechar app
+        receiveThread.IsBackground = true;
         receiveThread.Start();
 
         byte[] hello = Encoding.UTF8.GetBytes("HELLO");
@@ -38,28 +38,36 @@ public class UdpClientPong : MonoBehaviour
 
     void Update()
     {
-        // Movimento do cubo local
-        float h = Input.GetAxis("Horizontal");
+        // Movimento do cubo local apenas na vertical
         float v = Input.GetAxis("Vertical");
-        localCube.transform.Translate(new Vector3(h, v, 0) * Time.deltaTime * 5);
+        Rigidbody2D localRb = localCube.GetComponent<Rigidbody2D>();
+        Vector2 targetPos = localRb.position + new Vector2(0, v) * 15f * Time.deltaTime;
+        localRb.MovePosition(targetPos);
+
 
         // Envia posição para o servidor
-        string msg = "POS:" + localCube.transform.position.x.ToString("F2", CultureInfo.InvariantCulture) + ";" + localCube.transform.position.y.ToString("F2", CultureInfo.InvariantCulture);
+        string msg = "POS:" 
+            + localCube.transform.position.x.ToString("F2", CultureInfo.InvariantCulture) 
+            + ";" 
+            + localCube.transform.position.y.ToString("F2", CultureInfo.InvariantCulture);
         byte[] data = Encoding.UTF8.GetBytes(msg);
         client.Send(data, data.Length);
 
         // Aplica posição recebida para remoteCube (se houver)
         if (remotePositionsQueue.TryDequeue(out Vector3 remotePos))
         {
-            remoteCube.transform.position = Vector3.Lerp(remoteCube.transform.position, remotePos, Time.deltaTime * 10f);
+            Rigidbody2D remoteRb = remoteCube.GetComponent<Rigidbody2D>();
+            remoteRb.MovePosition(Vector2.Lerp(remoteRb.position, remotePos, Time.deltaTime * 15f));
+
         }
 
         // Aplica posição recebida para bola (se houver)
         if (ballPositionsQueue.TryDequeue(out Vector3 ballPos))
         {
-            ball.transform.position = Vector3.Lerp(ball.transform.position, ballPos, Time.deltaTime * 10f);
+            ball.transform.position = Vector3.Lerp(ball.transform.position, ballPos, Time.deltaTime * 15f);
         }
     }
+
 
     void ReceiveData()
     {
