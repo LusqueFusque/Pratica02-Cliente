@@ -24,7 +24,7 @@ public class UdpClientPong : MonoBehaviour
     void Start()
     {
         client = new UdpClient(5002);
-        serverEP = new IPEndPoint(IPAddress.Parse("10.57.1.122"), 5001);
+        serverEP = new IPEndPoint(IPAddress.Parse("10.57.1."), 5001);
         client.Connect(serverEP);
 
         receiveThread = new Thread(ReceiveData);
