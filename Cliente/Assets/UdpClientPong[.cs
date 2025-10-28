@@ -1,4 +1,4 @@
-using System.Collections.Concurrent; // para ConcurrentQueue
+using System.Collections.Concurrent;
 using UnityEngine;
 using System.Net;
 using System.Net.Sockets;
@@ -18,18 +18,17 @@ public class UdpClientPong : MonoBehaviour
 
     int myId = -1;
 
-    // Variáveis thread-safe para armazenar posições recebidas
     private ConcurrentQueue<Vector3> remotePositionsQueue = new ConcurrentQueue<Vector3>();
     private ConcurrentQueue<Vector3> ballPositionsQueue = new ConcurrentQueue<Vector3>();
 
     void Start()
     {
-        client = new UdpClient();
-        serverEP = new IPEndPoint(IPAddress.Parse("10.57.1.35"), 5001);
+        client = new UdpClient(5002);
+        serverEP = new IPEndPoint(IPAddress.Parse("10.57.1."), 5001);
         client.Connect(serverEP);
 
         receiveThread = new Thread(ReceiveData);
-        receiveThread.IsBackground = true; // garante que thread será finalizada quando fechar app
+        receiveThread.IsBackground = true;
         receiveThread.Start();
 
         byte[] hello = Encoding.UTF8.GetBytes("HELLO");
@@ -38,26 +37,29 @@ public class UdpClientPong : MonoBehaviour
 
     void Update()
     {
-        // Movimento do cubo local
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
-        localCube.transform.Translate(new Vector3(h, v, 0) * Time.deltaTime * 5);
+        // === Movimento da raquete local ===
+        float v = Input.GetAxisRaw("Vertical");
+        Vector3 pos = localCube.transform.position;
+        pos.y += v * 25f * Time.deltaTime; // velocidade bem maior
+        localCube.transform.position = pos;
 
         // Envia posição para o servidor
-        string msg = "POS:" + localCube.transform.position.x.ToString("F2", CultureInfo.InvariantCulture) + ";" + localCube.transform.position.y.ToString("F2", CultureInfo.InvariantCulture);
+        string msg = "POS:" +
+            pos.x.ToString("F2", CultureInfo.InvariantCulture) + ";" +
+            pos.y.ToString("F2", CultureInfo.InvariantCulture);
         byte[] data = Encoding.UTF8.GetBytes(msg);
         client.Send(data, data.Length);
 
-        // Aplica posição recebida para remoteCube (se houver)
+        // === Atualiza oponente ===
         if (remotePositionsQueue.TryDequeue(out Vector3 remotePos))
         {
-            remoteCube.transform.position = Vector3.Lerp(remoteCube.transform.position, remotePos, Time.deltaTime * 10f);
+            remoteCube.transform.position = remotePos; // sem suavização
         }
 
-        // Aplica posição recebida para bola (se houver)
+        // === Atualiza bola ===
         if (ballPositionsQueue.TryDequeue(out Vector3 ballPos))
         {
-            ball.transform.position = Vector3.Lerp(ball.transform.position, ballPos, Time.deltaTime * 10f);
+            ball.transform.position = ballPos; // sem suavização
         }
     }
 
