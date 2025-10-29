@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Globalization;
 using System.Collections.Generic;
+using TMPro; // Para TextMeshPro
 
 public class UdpClientPongFour : MonoBehaviour
 {
@@ -20,6 +21,10 @@ public class UdpClientPongFour : MonoBehaviour
     public GameObject paddle4;
     public GameObject ball;
     
+    // UI do Placar
+    public TextMeshProUGUI scoreText; // Arraste um Text (TMP) do Canvas aqui
+    public TextMeshProUGUI playerInfoText; // Arraste outro Text (TMP) aqui
+    
     int myId = -1;
     
     // Placar
@@ -29,6 +34,11 @@ public class UdpClientPongFour : MonoBehaviour
     // Dicionário para armazenar posições dos outros jogadores
     private Dictionary<int, ConcurrentQueue<Vector3>> playerQueues = new Dictionary<int, ConcurrentQueue<Vector3>>();
     private ConcurrentQueue<Vector3> ballPositionsQueue = new ConcurrentQueue<Vector3>();
+    
+    // Última posição conhecida da bola (para interpolação suave)
+    private Vector3 lastBallPosition;
+    private Vector3 targetBallPosition;
+    private float ballLerpSpeed = 20f; // Velocidade de interpolação da bola
     
     void Start()
     {
@@ -48,6 +58,15 @@ public class UdpClientPongFour : MonoBehaviour
         
         byte[] hello = Encoding.UTF8.GetBytes("HELLO");
         client.Send(hello, hello.Length);
+        
+        // Inicializa posição da bola
+        if (ball != null)
+        {
+            lastBallPosition = ball.transform.position;
+            targetBallPosition = ball.transform.position;
+        }
+        
+        UpdateScoreUI();
     }
     
     void Update()
@@ -71,29 +90,38 @@ public class UdpClientPongFour : MonoBehaviour
         UpdateRemotePaddle(3, paddle3);
         UpdateRemotePaddle(4, paddle4);
         
-        // Atualiza posição da bola
+        // Atualiza posição da bola com interpolação mais rápida e precisa
         if (ballPositionsQueue.TryDequeue(out Vector3 ballPos))
         {
-            ball.transform.position = Vector3.Lerp(ball.transform.position, ballPos, Time.deltaTime * 10f);
+            targetBallPosition = ballPos;
+        }
+        
+        if (ball != null)
+        {
+            // Interpolação mais agressiva para seguir o servidor
+            ball.transform.position = Vector3.Lerp(ball.transform.position, targetBallPosition, Time.deltaTime * ballLerpSpeed);
+            
+            // Se a distância for muito grande, teleporta (evita atrasos grandes)
+            float distance = Vector3.Distance(ball.transform.position, targetBallPosition);
+            if (distance > 2f)
+            {
+                ball.transform.position = targetBallPosition;
+            }
         }
     }
     
-    void OnGUI()
+    void UpdateScoreUI()
     {
-        // Exibe o placar na tela
-        GUI.skin.label.fontSize = 30;
-        GUI.Label(new Rect(Screen.width / 2 - 150, 20, 300, 50), 
-                  $"Esquerda {scoreLeft} x {scoreRight} Direita", 
-                  GUI.skin.label);
-        
-        // Exibe qual jogador você é
-        if (myId != -1)
+        if (scoreText != null)
         {
-            GUI.skin.label.fontSize = 20;
-            string team = (myId <= 2) ? "Time Esquerda" : "Time Direita";
-            GUI.Label(new Rect(20, 20, 300, 30), 
-                      $"Você é o Jogador {myId} ({team})", 
-                      GUI.skin.label);
+            scoreText.text = $"{scoreLeft}  -  {scoreRight}";
+        }
+        
+        if (playerInfoText != null && myId != -1)
+        {
+            string team = (myId <= 2) ? "Time Verde (Esquerda)" : "Time Rosa (Direita)";
+            string color = (myId <= 2) ? "#00FF00" : "#FF69B4";
+            playerInfoText.text = $"<color={color}>Você é o Jogador {myId}\n{team}</color>";
         }
     }
     
@@ -122,6 +150,7 @@ public class UdpClientPongFour : MonoBehaviour
                     myId = int.Parse(msg.Substring(7));
                     Debug.Log("[Cliente] Recebi ID = " + myId);
                     AssignLocalPaddle();
+                    UpdateScoreUI();
                 }
                 else if (msg.StartsWith("PLAYER:"))
                 {
@@ -147,6 +176,7 @@ public class UdpClientPongFour : MonoBehaviour
                     scoreLeft = int.Parse(scores[0]);
                     scoreRight = int.Parse(scores[1]);
                     Debug.Log($"[Cliente] Placar atualizado: {scoreLeft} x {scoreRight}");
+                    UpdateScoreUI();
                 }
             }
             catch (SocketException ex)
