@@ -13,14 +13,18 @@ public class UdpClientPongFour : MonoBehaviour
     Thread receiveThread;
     IPEndPoint serverEP;
     
-    public GameObject localPaddle; // MEU paddle (controlado por mim)
-    public GameObject paddle1; // Paddle do jogador 1
-    public GameObject paddle2; // Paddle do jogador 2
-    public GameObject paddle3; // Paddle do jogador 3
-    public GameObject paddle4; // Paddle do jogador 4
+    public GameObject localPaddle;
+    public GameObject paddle1;
+    public GameObject paddle2;
+    public GameObject paddle3;
+    public GameObject paddle4;
     public GameObject ball;
     
     int myId = -1;
+    
+    // Placar
+    private int scoreLeft = 0;
+    private int scoreRight = 0;
     
     // Dicionário para armazenar posições dos outros jogadores
     private Dictionary<int, ConcurrentQueue<Vector3>> playerQueues = new Dictionary<int, ConcurrentQueue<Vector3>>();
@@ -74,9 +78,28 @@ public class UdpClientPongFour : MonoBehaviour
         }
     }
     
+    void OnGUI()
+    {
+        // Exibe o placar na tela
+        GUI.skin.label.fontSize = 30;
+        GUI.Label(new Rect(Screen.width / 2 - 150, 20, 300, 50), 
+                  $"Esquerda {scoreLeft} x {scoreRight} Direita", 
+                  GUI.skin.label);
+        
+        // Exibe qual jogador você é
+        if (myId != -1)
+        {
+            GUI.skin.label.fontSize = 20;
+            string team = (myId <= 2) ? "Time Esquerda" : "Time Direita";
+            GUI.Label(new Rect(20, 20, 300, 30), 
+                      $"Você é o Jogador {myId} ({team})", 
+                      GUI.skin.label);
+        }
+    }
+    
     void UpdateRemotePaddle(int id, GameObject paddle)
     {
-        if (id == myId || paddle == null) return; // Não atualiza o próprio paddle
+        if (id == myId || paddle == null) return;
         
         if (playerQueues[id].TryDequeue(out Vector3 pos))
         {
@@ -98,8 +121,6 @@ public class UdpClientPongFour : MonoBehaviour
                 {
                     myId = int.Parse(msg.Substring(7));
                     Debug.Log("[Cliente] Recebi ID = " + myId);
-                    
-                    // Configura o paddle local baseado no ID
                     AssignLocalPaddle();
                 }
                 else if (msg.StartsWith("PLAYER:"))
@@ -120,6 +141,13 @@ public class UdpClientPongFour : MonoBehaviour
                     float y = float.Parse(coords[1], CultureInfo.InvariantCulture);
                     ballPositionsQueue.Enqueue(new Vector3(x, y, 0));
                 }
+                else if (msg.StartsWith("SCORE:"))
+                {
+                    string[] scores = msg.Substring(6).Split(';');
+                    scoreLeft = int.Parse(scores[0]);
+                    scoreRight = int.Parse(scores[1]);
+                    Debug.Log($"[Cliente] Placar atualizado: {scoreLeft} x {scoreRight}");
+                }
             }
             catch (SocketException ex)
             {
@@ -135,7 +163,6 @@ public class UdpClientPongFour : MonoBehaviour
     
     void AssignLocalPaddle()
     {
-        // Atribui o paddle correto baseado no ID recebido
         switch (myId)
         {
             case 1:
