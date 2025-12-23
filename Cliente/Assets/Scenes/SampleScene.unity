@@ -155,8 +155,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 163.57083, y: -112.98555}
-  m_SizeDelta: {x: 125.9417, y: 22.0289}
+  m_AnchoredPosition: {x: 267.26904, y: -181.74669}
+  m_SizeDelta: {x: 198.531, y: 34.7257}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &20573265
 MonoBehaviour:
@@ -1492,7 +1492,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 800, y: 600}
@@ -1749,9 +1749,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5054636b2be88cb4c91ca05217906aed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isServer: 1
-  serverIP: 192.168.1.100
-  chatPort: 5556
+  serverIP: 127.0.0.1
+  serverPort: 5556
   chatInput: {fileID: 20573265}
   chatDisplay: {fileID: 1060507971}
   scrollRect: {fileID: 1043183096}
@@ -1839,7 +1838,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: -3.8027}
+  m_AnchoredPosition: {x: 0, y: -3.8026886}
   m_SizeDelta: {x: 20, y: 27.6055}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &898809864
@@ -2079,8 +2078,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 173.54999, y: -38.290833}
-  m_SizeDelta: {x: 145.9, y: 140.4183}
+  m_AnchoredPosition: {x: 283, y: -64}
+  m_SizeDelta: {x: 229.9927, y: 221.3515}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1043183096
 MonoBehaviour:
@@ -2322,8 +2321,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 235.07, y: -112.99}
-  m_SizeDelta: {x: 22.856, y: 22.029}
+  m_AnchoredPosition: {x: 379.9784, y: -181.7537}
+  m_SizeDelta: {x: 36.0296, y: 34.7259}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1235292861
 MonoBehaviour:
@@ -3491,8 +3490,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 898809864}
   m_HandleRect: {fileID: 898809863}
   m_Direction: 2
-  m_Value: 1
-  m_Size: 0.468061
+  m_Value: 0.9999996
+  m_Size: 0.73783827
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
